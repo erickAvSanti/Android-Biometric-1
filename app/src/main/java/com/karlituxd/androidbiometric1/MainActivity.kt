@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity() {
 
                     override fun onAuthenticationFailed() {
                         super.onAuthenticationFailed()
-                        Toast.makeText(applicationContext, "Authentication failed",
+                        Toast.makeText(applicationContext, "falló la verificación",
                             Toast.LENGTH_SHORT)
                             .show()
                     }
