@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,6 +15,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.*
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
+import androidx.core.widget.TextViewCompat
 import java.util.concurrent.Executor
 
 class MainActivity : AppCompatActivity() {
@@ -33,16 +35,16 @@ class MainActivity : AppCompatActivity() {
         val availableRules = BIOMETRIC_STRONG or DEVICE_CREDENTIAL or BIOMETRIC_WEAK
         when (val res = biometricManager.canAuthenticate(availableRules)) {
             BiometricManager.BIOMETRIC_SUCCESS -> {
-                message = "App can authenticate using biometrics or device credential"
+                message = "BIOMETRIC_SUCCESS"
                 biometricOrDeviceCredentialAvailable = true
             }
 
             BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ->
-                message = "No biometric features available on this device."
+                message = "BIOMETRIC_ERROR_NO_HARDWARE"
             BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
-                message ="Biometric features are currently unavailable."
+                message ="BIOMETRIC_ERROR_HW_UNAVAILABLE"
             BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-                message = "Biometric and device credential features are currently unavailable"
+                message = "BIOMETRIC_ERROR_NONE_ENROLLED"
                 // Prompts the user to create credentials that your app accepts.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     val enrollIntent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
@@ -61,10 +63,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             else -> {
-                message = "No biometric or device credentials properties defined, status = $res"
+                message = "BIOMETRIC_ERROR, código = $res"
             }
         }
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        findViewById<TextView>(R.id.my_text).apply {
+            text = "estado/status = $message"
+        }
         if(biometricOrDeviceCredentialAvailable){
             executor = ContextCompat.getMainExecutor(this)
             biometricPrompt = BiometricPrompt(this, executor,
@@ -73,7 +77,7 @@ class MainActivity : AppCompatActivity() {
                                                        errString: CharSequence) {
                         super.onAuthenticationError(errorCode, errString)
                         Toast.makeText(applicationContext,
-                            "Authentication error: $errString", Toast.LENGTH_SHORT)
+                            "Error al validar: $errString", Toast.LENGTH_SHORT)
                             .show()
 
                     }
@@ -82,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                         result: BiometricPrompt.AuthenticationResult) {
                         super.onAuthenticationSucceeded(result)
                         Toast.makeText(applicationContext,
-                            "Authentication succeeded!", Toast.LENGTH_SHORT)
+                            "Validación exitosa!", Toast.LENGTH_SHORT)
                             .show()
                     }
 
@@ -95,16 +99,18 @@ class MainActivity : AppCompatActivity() {
                 })
 
             promptInfoBuilder = BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Biometric login for my app")
-                .setSubtitle("Log in using your biometric credential")
+                .setTitle("Verificación para mi app")
+                .setSubtitle("Por favor identifícate")
                 .setAllowedAuthenticators(availableRules)
             promptInfo = promptInfoBuilder.build()
 
             val biometricLoginButton =
-                findViewById<Button>(R.id.biometric_login)
+                findViewById<Button>(R.id.my_button)
             biometricLoginButton.setOnClickListener {
                 biometricPrompt.authenticate(promptInfo)
             }
+        }else{
+            findViewById<Button>(R.id.my_button).isEnabled = false
         }
     }
 }
